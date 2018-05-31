@@ -1,23 +1,46 @@
 package main
 
 import (
-	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
 )
+
+// gitSHA from build
+var gitSHA string
+
+type HealthResponse struct {
+	GitSHA string `json:"gitSHA,omitempty"`
+}
 
 func main() {
 	// endpoints
-	http.HandleFunc("/health/", health)
+	http.HandleFunc("/health/", healthHandler(gitSHA, nil))
 	if err := http.ListenAndServe(":8081", nil); err != nil {
 		panic(err)
 	}
 }
 
-func health(w http.ResponseWriter, r *http.Request) {
+func healthHandler(gitSHA string, f func() error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	hash := sha256.New()
-	message := strings.TrimPrefix(r.URL.Path, "/health/")
-	sha := hash.Sum([]byte(message))
-	w.Write(sha)
+		fmt.Println("In closure")
+		// throw 500 if there is nothing
+		if f != nil {
+			if err := f(); err != nil {
+				http.Error(w, "", http.StatusInternalServerError)
+			}
+		}
+
+		fmt.Println("gitSHA: " + gitSHA)
+		// Do the work
+		h := HealthResponse{
+			GitSHA: gitSHA,
+		}
+		b, err := json.Marshal(h)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+		}
+		w.Write(b)
+	}
 }
