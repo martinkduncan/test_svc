@@ -1,4 +1,4 @@
-LDFLAGS = -ldflags "-X main.gitSHA=$(shell git rev-parse HEAD)"
+LDFLAGS = -ldflags "-X main.gitSHA=$(shell git rev-parse master)"
 
 OS := $(shell uname)
 
