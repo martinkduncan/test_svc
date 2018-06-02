@@ -9,6 +9,7 @@ import (
 // gitSHA from build
 var gitSHA string
 
+// this comment is needed because this is exported.
 type HealthResponse struct {
 	GitSHA string `json:"gitSHA,omitempty"`
 }
